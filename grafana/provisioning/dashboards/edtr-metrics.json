@@ -1,0 +1,111 @@
+{
+  "id": null,
+  "uid": "edtr-metrics-dashboard",
+  "title": "EDTR Metrics Dashboard",
+  "tags": ["EDTR", "Metrics"],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "User Fetch Requests / Errors",
+      "targets": [
+        {
+          "expr": "rate(user_fetch_requests_total[1m])",
+          "legendFormat": "User Requests"
+        },
+        {
+          "expr": "rate(user_fetch_errors_total[1m])",
+          "legendFormat": "User Errors"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "Requests per second"}
+    },
+    {
+      "type": "graph",
+      "title": "User / Attendance Records Processed",
+      "targets": [
+        {
+          "expr": "rate(user_records_processed_total[1m])",
+          "legendFormat": "User Records"
+        },
+        {
+          "expr": "rate(attendance_records_processed_total[1m])",
+          "legendFormat": "Attendance Records"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "Records/sec"}
+    },
+    {
+      "type": "graph",
+      "title": "Request Duration (Average)",
+      "targets": [
+        {
+          "expr": "rate(request_duration_seconds_sum[1m]) / rate(request_duration_seconds_count[1m])",
+          "legendFormat": "Avg Request Duration"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "Seconds"}
+    },
+    {
+      "type": "bar gauge",
+      "title": "HTTP Requests by Status",
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(http_requests_total[1m]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "reqs"}}
+    },
+    {
+      "type": "graph",
+      "title": "Python GC Metrics",
+      "targets": [
+        {
+          "expr": "rate(python_gc_objects_collected_total[1m])",
+          "legendFormat": "GC Collected"
+        },
+        {
+          "expr": "rate(python_gc_objects_uncollectable_total[1m])",
+          "legendFormat": "GC Uncollectable"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "Objects/sec"}
+    },
+    {
+      "type": "graph",
+      "title": "Process Memory",
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes",
+          "legendFormat": "Resident Memory"
+        },
+        {
+          "expr": "process_virtual_memory_bytes",
+          "legendFormat": "Virtual Memory"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "Bytes"}
+    },
+    {
+      "type": "graph",
+      "title": "Process CPU Time",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total[1m])",
+          "legendFormat": "CPU Seconds/sec"
+        }
+      ],
+      "xaxis": {"mode": "time"},
+      "yaxis": {"label": "CPU seconds"}
+    }
+  ]
+}

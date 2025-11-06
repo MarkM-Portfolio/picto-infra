@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-deployment" .Values.prometheus.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  replicas: {{ .Values.prometheus.replica_count }}
+  selector:
+    matchLabels:
+      app:  {{ .Values.prometheus.container_name }}
+  template:
+    metadata:
+      labels:
+        app:  {{ .Values.prometheus.container_name }}
+    spec:
+      containers:
+        - name: {{ .Values.prometheus.container_name }}
+          image: {{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}
+          imagePullPolicy: {{ .Values.prometheus.image.pull_policy }}
+          ports:
+            - containerPort: {{ .Values.prometheus.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.config.name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.prometheus.container_name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  selector:
+    app:  {{ .Values.prometheus.container_name }}
+  ports:
+    - port: {{ .Values.prometheus.port }}
+      targetPort: {{ .Values.prometheus.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-ingress" .Values.prometheus.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure 
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        {{- if .Values.secret.tls.use_nipio }}
+        - {{ printf "%s.%s.nip.io" .Values.prometheus.container_name .Values.global.host_ip | quote }}
+        {{- end }}
+        - {{ printf "%s.localhost" .Values.prometheus.container_name | quote }}
+        - {{ printf "%s.%s" .Values.prometheus.container_name .Values.secret.tls.domain_host | quote }}
+        - {{ printf "%s.%s" .Values.prometheus.container_name .Values.secret.tls.domain | quote }}
+      secretName: {{ .Values.secret.tls.name }}
+  rules:
+    {{- if .Values.secret.tls.use_nipio }}
+    - host: {{ printf "%s.%s.nip.io" .Values.prometheus.container_name .Values.global.host_ip | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.prometheus.container_name }}
+                port:
+                  number: {{ .Values.prometheus.port }}
+    {{- end }}
+    - host: {{ printf "%s.localhost" .Values.prometheus.container_name | quote }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Values.prometheus.container_name }}
+              port:
+                number: {{ .Values.prometheus.port }}
+    - host: {{ printf "%s.%s" .Values.prometheus.container_name .Values.secret.tls.domain_host | quote }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Values.prometheus.container_name }}
+              port:
+                number: {{ .Values.prometheus.port }}
+    - host: {{ printf "%s.%s" .Values.prometheus.container_name .Values.secret.tls.domain | quote }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Values.prometheus.container_name }}
+              port:
+                number: {{ .Values.prometheus.port }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ${REPO_NAME}
+description: Helm chart for ${REPO_NAME} (${ENVIRONMENT})
+type: application
+version: 0.1.0
+appVersion: "latest"

@@ -1,0 +1,24 @@
+# -------------------------------------------------------
+# 🧱 Base image
+# -------------------------------------------------------
+FROM prom/node-exporter:latest
+
+# -------------------------------------------------------
+# ⚙️ Runtime configuration
+# -------------------------------------------------------
+# Default port node_exporter exposes
+EXPOSE ${NODE_EXPORTER_PORT}
+
+# Optional: add environment variable for collector options
+ENV NODE_EXPORTER_ARGS="--path.rootfs=/host"
+
+# -------------------------------------------------------
+# 🧰 (Optional) Override entrypoint to add flexibility
+# -------------------------------------------------------
+ENTRYPOINT [ "/bin/sh", "-c", "node_exporter $NODE_EXPORTER_ARGS" ]
+
+# -------------------------------------------------------
+# 🧩 Healthcheck (optional)
+# -------------------------------------------------------
+# HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+#     CMD wget -qO- http://localhost:${NODE_EXPORTER_PORT}/metrics || exit 1

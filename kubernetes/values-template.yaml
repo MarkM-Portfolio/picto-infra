@@ -1,0 +1,92 @@
+# ============================================================
+# 🌍 Global Settings
+# ============================================================
+namespace: ${RELEASE}
+
+config:
+  name: ${REPO_NAME}-env
+
+secret:
+  tls:
+    enabled: true
+    name: ${DOMAIN_PREFIX}-tls
+    domain: ${DOMAIN_PREFIX}.com
+    domain_host: ${DOMAIN_PREFIX}.dev
+    cert: ${PWD}/${DOMAIN_PREFIX}-cert.pem
+    key: ${PWD}/${DOMAIN_PREFIX}-key.pem
+    use_nipio: true
+
+# ============================================================
+# ⚙️ Application Settings
+# ============================================================
+global:
+  app_name: ${REPO_NAME}
+  environment: ${ENVIRONMENT}
+  host_ip: ${HOST_IP}
+  host_gateway_ip: ${HOST_GATEWAY_IP}
+  managed_by: helm
+
+# ============================================================
+# 🔐 MKCert CA Server
+# ============================================================
+ca_server:
+  image:
+    repository: localhost:${CONTAINER_REGISTRY_LOCAL_PORT}/ca-server
+    tag: latest
+    pull_policy: IfNotPresent
+  container_name: ca-server
+  port: ${CA_SERVER_PORT}
+  replica_count: 1
+  volumes:
+    name: ca-server-data
+    mode: ReadWriteOnce
+    storage: ${CA_SERVER_STORAGE}
+    path: ${CA_SERVER_PVC}
+
+# ============================================================
+# 🧩 Container Registry Browser
+# ============================================================
+registry_browser:
+  image:
+    repository: localhost:${CONTAINER_REGISTRY_LOCAL_PORT}/registry-browser
+    tag: latest
+    pull_policy: IfNotPresent
+  container_name: registry-browser
+  port: ${REGISTRY_PORT}
+  replica_count: 1
+
+# ============================================================
+# 📈 Prometheus
+# ============================================================
+prometheus:
+  image:
+    repository: localhost:${CONTAINER_REGISTRY_LOCAL_PORT}/prometheus
+    tag: latest
+    pull_policy: IfNotPresent
+  container_name: prometheus
+  port: ${PROMETHEUS_PORT}
+  replica_count: 1
+  # volumes:
+  #   name: grafana-data
+  #   type: PersistentVolumeClaim
+  #   mode: [ "ReadWriteOnce" ]
+  #   storage: ${GRAFANA_STORAGE}
+  #   path: ${PROMETHEUS_EPH}
+
+# ============================================================
+# 🌀 Grafana
+# ============================================================
+grafana:
+  image:
+    repository: localhost:${CONTAINER_REGISTRY_LOCAL_PORT}/grafana
+    tag: latest
+    pull_policy: IfNotPresent
+  container_name: grafana
+  port: ${GRAFANA_PORT}
+  replica_count: ${GRAFANA_REPLICAS}
+  volumes:
+    name: grafana-data
+    mode: ReadWriteOnce
+    storage: ${GRAFANA_STORAGE}
+    path: ${GRAFANA_PVC}
+    

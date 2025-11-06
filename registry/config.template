@@ -1,0 +1,26 @@
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  filesystem:
+    rootdirectory: ${CONTAINER_REGISTRY_PVC}
+  delete:
+    enabled: ${CONTAINER_REGISTRY_DELETE_ENABLED}
+http:
+  addr: :${CONTAINER_REGISTRY_PORT}
+  headers:
+    X-Content-Type-Options: [nosniff]
+  # Optional CORS support for dev
+    Access-Control-Allow-Origin: ['*']
+    Access-Control-Allow-Methods: ['GET', 'OPTIONS', 'DELETE']
+    Access-Control-Allow-Headers: ['Authorization', 'Accept', 'Cache-Control', 'Range']
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+  # auth:
+  #   htpasswd:
+  #     realm: basic-realm
+  #     path: /auth/htpasswd

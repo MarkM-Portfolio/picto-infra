@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-deployment" .Values.grafana.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  replicas: {{ .Values.grafana.replica_count }}
+  selector:
+    matchLabels:
+      app: {{ .Values.grafana.container_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.grafana.container_name }}
+    spec:
+      containers:
+        - name: {{ .Values.grafana.container_name }}
+          image: {{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}
+          imagePullPolicy: {{ .Values.grafana.image.pull_policy }}
+          ports:
+            - containerPort: {{ .Values.grafana.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.config.name }}
+          volumeMounts:
+            - name: {{ .Values.grafana.volumes.name }}
+              mountPath: {{ .Values.grafana.volumes.path }}
+      volumes:
+        - name: {{ .Values.grafana.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.grafana.volumes.name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.grafana.container_name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.grafana.container_name }}
+  ports:
+    - port: {{ .Values.grafana.port }}
+      targetPort: {{ .Values.grafana.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-ingress" .Values.grafana.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure 
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        {{- if .Values.secret.tls.use_nipio }}
+        - {{ printf "%s.%s.nip.io" .Values.grafana.container_name .Values.global.host_ip | quote }}
+        {{- end }}
+        - {{ printf "%s.localhost" .Values.grafana.container_name | quote }}
+        - {{ printf "%s.%s" .Values.grafana.container_name .Values.secret.tls.domain_host | quote }}
+        - {{ printf "%s.%s" .Values.grafana.container_name .Values.secret.tls.domain | quote }}
+      secretName: {{ .Values.secret.tls.name }}
+  rules:
+    {{- if .Values.secret.tls.use_nipio }}
+    - host: {{ printf "%s.%s.nip.io" .Values.grafana.container_name .Values.global.host_ip | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.grafana.container_name }}
+                port:
+                  number: {{ .Values.grafana.port }}
+    {{- end }}
+    - host: {{ printf "%s.localhost" .Values.grafana.container_name | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.grafana.container_name }}
+                port:
+                  number: {{ .Values.grafana.port }}
+    - host: {{ printf "%s.%s" .Values.grafana.container_name .Values.secret.tls.domain_host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.grafana.container_name }}
+                port:
+                  number: {{ .Values.grafana.port }}
+    - host: {{ printf "%s.%s" .Values.grafana.container_name .Values.secret.tls.domain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.grafana.container_name }}
+                port:
+                  number: {{ .Values.grafana.port }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.grafana.volumes.name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  storageClassName: local-path
+  accessModes:
+    - {{ .Values.grafana.volumes.mode }}
+  resources:
+    requests:
+      storage: {{ .Values.grafana.volumes.storage }}

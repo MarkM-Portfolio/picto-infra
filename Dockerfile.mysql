@@ -1,0 +1,40 @@
+ARG MYSQL_VER
+# -------------------------------------------------------
+# 🧱 Base image
+# -------------------------------------------------------
+FROM mysql:${MYSQL_VER}
+
+# -------------------------------------------------------
+# 🌍 Environment defaults
+# -------------------------------------------------------
+ARG MYSQL_PVC
+ARG MYSQL_PORT
+
+# Persist environment inside container
+ENV MYSQL_PVC=${MYSQL_PVC}
+ENV MYSQL_PORT=${MYSQL_PORT}
+
+# -------------------------------------------------------
+# 📦 Copy optional SQL initialization scripts
+# -------------------------------------------------------
+# Uncomment if you have init.sql or multiple .sql/.sh scripts
+# COPY ./mysql/init.sql /docker-entrypoint-initdb.d/init.sql
+# COPY ./mysql/init.d/ /docker-entrypoint-initdb.d/
+
+# -------------------------------------------------------
+# 🧰 Permissions & directories
+# -------------------------------------------------------
+RUN mkdir -p ${MYSQL_PVC} \
+    && chown -R mysql:mysql ${MYSQL_PVC}
+
+VOLUME ["${MYSQL_PVC}"]
+
+# -------------------------------------------------------
+# 🚀 Expose and launch MySQL
+# -------------------------------------------------------
+EXPOSE ${MYSQL_PORT}
+
+# Keep default MySQL entrypoint
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+
+CMD [ "mysqld" ]

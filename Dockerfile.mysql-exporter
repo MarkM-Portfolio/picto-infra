@@ -1,0 +1,28 @@
+# -------------------------------------------------------
+# 🧱 Base image
+# -------------------------------------------------------
+FROM prom/mysqld-exporter:latest
+
+# -------------------------------------------------------
+# ⚙️ Environment Variables
+# -------------------------------------------------------
+# Default environment variables for MySQL connection
+# You can override these using docker-compose or .env
+ENV MYSQL_EXPORTER_DATA_SOURCE=${MYSQL_EXPORTER_DATA_SOURCE}
+ENV MYSQLD_EXPORTER_ARGS="--collect.global_status --collect.info_schema.innodb_metrics --collect.auto_increment.columns"
+
+# -------------------------------------------------------
+# 🚀 Expose exporter metrics port
+# -------------------------------------------------------
+EXPOSE ${MYSQL_EXPORTER_PORT}
+
+# -------------------------------------------------------
+# 🧰 Optional: Override entrypoint for flexibility
+# -------------------------------------------------------
+ENTRYPOINT [ "/bin/sh", "-c", "mysqld_exporter $MYSQLD_EXPORTER_ARGS" ]
+
+# -------------------------------------------------------
+# 🧩 Healthcheck (optional but recommended)
+# -------------------------------------------------------
+# HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+#     CMD wget -qO- http://localhost:${MYSQL_EXPORTER_PORT}/metrics || exit 1

@@ -1,0 +1,15 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus Metrics
+    type: prometheus
+    access: proxy
+    url: http://prometheus:${PROMETHEUS_PORT}
+    isDefault: true
+    editable: true
+  - name: Redis Metrics
+    type: prometheus
+    access: proxy
+    url: http://redis:${REDIS_EXPORTER_PORT}
+    isDefault: false
+    editable: true
+    

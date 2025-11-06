@@ -1,0 +1,37 @@
+*.env*
+*.pem*
+
+# generated files
+registry/config.yml
+grafana/provisioning/datasources/data-metrics.yaml
+prometheus/config/prometheus.yaml
+kubernetes/Chart.yaml
+kubernetes/values.yaml
+kubernetes/values-env.yaml
+
+# persistent-volume-claims
+registry/data
+mysql/backup
+prometheus/data
+*.log
+.DS_Store
+.dll
+.exe
+.git
+.html
+.idea
+.jar
+.jpg
+.mp4
+.png
+.so
+.tar
+.terraform
+.venv
+.vscode
+.zip
+__pycache__
+bin
+build
+dist
+node_modules

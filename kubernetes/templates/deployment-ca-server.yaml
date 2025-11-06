@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-deployment" .Values.ca_server.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  replicas: {{ .Values.ca_server.replica_count }}
+  selector:
+    matchLabels:
+      app: {{ .Values.ca_server.container_name }}
+  template:
+    metadata:
+      labels:
+        app:  {{ .Values.ca_server.container_name }}
+    spec:
+      containers:
+        - name:  {{ .Values.ca_server.container_name }}
+          image: {{ .Values.ca_server.image.repository }}:{{ .Values.ca_server.image.tag }}
+          imagePullPolicy: {{ .Values.ca_server.image.pull_policy }}
+          ports:
+            - containerPort: {{ .Values.ca_server.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.config.name }}
+          volumeMounts:
+            - name: {{ .Values.ca_server.volumes.name }}
+              mountPath: {{ .Values.ca_server.volumes.name }}
+      volumes:
+        - name: {{ .Values.ca_server.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.ca_server.volumes.name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.ca_server.container_name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.ca_server.container_name }}
+  ports:
+    - port: {{ .Values.ca_server.port }}
+      targetPort: {{ .Values.ca_server.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-ingress" .Values.ca_server.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - {{ printf "%s.%s" .Values.ca_server.container_name .Values.secret.tls.domain_host | quote }}
+        - {{ printf "%s.%s" .Values.ca_server.container_name .Values.secret.tls.domain | quote }}
+      secretName: {{ .Values.secret.tls.name }}
+  rules:
+    - host: {{ printf "%s.%s" .Values.ca_server.container_name .Values.secret.tls.domain_host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.ca_server.container_name }}
+                port:
+                  number: {{ .Values.ca_server.port }}
+    - host: {{ printf "%s.%s" .Values.ca_server.container_name .Values.secret.tls.domain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.ca_server.container_name }}
+                port:
+                  number: {{ .Values.ca_server.port }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.ca_server.volumes.name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  storageClassName: local-path
+  accessModes:
+    - {{ .Values.ca_server.volumes.mode }}
+  resources:
+    requests:
+      storage: {{ .Values.ca_server.volumes.storage }}

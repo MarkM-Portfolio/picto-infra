@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Release.Namespace | default .Values.namespace }}
+  labels:
+    app: {{ .Values.global.app_name }}
+    managed-by: {{ .Values.global.managed_by }}
+    

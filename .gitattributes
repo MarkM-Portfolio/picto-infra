@@ -1,0 +1,16 @@
+*.active linguist-language=Active linguist-vendored=false
+*.dockerignore linguist-language=Docker linguist-vendored=false
+*.env linguist-language=Env linguist-vendored=false
+*.gitignore linguist-language=Git linguist-vendored=false
+*.helmignore linguist-language=Helmignore linguist-vendored=false
+*.json linguist-language=JSON linguist-vendored=false
+*.md linguist-language=Markdown linguist-vendored=false
+*.mysql linguist-language=Mysql linguist-vendored=false
+*.mysql-exporter linguist-language=Mysql-exporter linguist-vendored=false
+*.node-exporter linguist-language=Node-exporter linguist-vendored=false
+*.pem linguist-language=PEM Key linguist-vendored=false
+*.registry linguist-language=Registry linguist-vendored=false
+*.sh linguist-language=Bash linguist-vendored=false
+*.template linguist-language=Template linguist-vendored=false
+*.yml linguist-language=YAML linguist-vendored=false
+docker-compose.yaml linguist-language=Docker linguist-vendored=false

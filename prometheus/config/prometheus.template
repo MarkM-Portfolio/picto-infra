@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'server-health'
+    static_configs:
+      - targets: [ '${NODE_EXPORTER_HOST}:${NODE_EXPORTER_PORT}' ]
+
+  - job_name: 'metrics'
+    static_configs:
+      - targets: [ 'metrics:${METRICS_PORT}' ]
+
+  # - job_name: 'api'
+  #   static_configs:
+  #     - targets: [ 'api:${API_PORT}' ]
+
+  # - job_name: '-redis'
+  #   static_configs:
+  #     - targets: [ 'redis:${REDIS_PORT}' ]

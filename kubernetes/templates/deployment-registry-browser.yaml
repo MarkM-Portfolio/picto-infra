@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-deployment" .Values.registry_browser.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  replicas: {{ .Values.registry_browser.replica_count }}
+  selector:
+    matchLabels:
+      app: {{ .Values.registry_browser.container_name }}
+  template:
+    metadata:
+      labels:
+        app:  {{ .Values.registry_browser.container_name }}
+    spec:
+      containers:
+        - name:  {{ .Values.registry_browser.container_name }}
+          image: {{ .Values.registry_browser.image.repository }}:{{ .Values.registry_browser.image.tag }}
+          imagePullPolicy: {{ .Values.registry_browser.image.pull_policy }}
+          ports:
+            - containerPort: {{ .Values.registry_browser.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.config.name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.registry_browser.container_name }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.registry_browser.container_name }}
+  ports:
+    - port: {{ .Values.registry_browser.port }}
+      targetPort: {{ .Values.registry_browser.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-ingress" .Values.registry_browser.container_name | quote }}
+  namespace: {{ .Release.Namespace | default .Values.namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure 
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        {{- if .Values.secret.tls.use_nipio }}
+        - {{ printf "%s.%s.nip.io" .Values.registry_browser.container_name .Values.global.host_ip | quote }}
+        {{- end }}
+        - {{ printf "%s.localhost" .Values.registry_browser.container_name | quote }}
+        - {{ printf "%s.%s" .Values.registry_browser.container_name .Values.secret.tls.domain_host | quote }}
+        - {{ printf "%s.%s" .Values.registry_browser.container_name .Values.secret.tls.domain | quote }}
+      secretName: {{ .Values.secret.tls.name }}
+  rules:
+  rules:
+    {{- if .Values.secret.tls.use_nipio }}
+    - host: {{ printf "%s.%s.nip.io" .Values.registry_browser.container_name .Values.global.host_ip | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.registry_browser.container_name }}
+                port:
+                  number: {{ .Values.registry_browser.port }}
+    {{- end }}
+    - host: {{ printf "%s.localhost" .Values.registry_browser.container_name | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.registry_browser.container_name }}
+                port:
+                  number: {{ .Values.registry_browser.port }}
+    - host: {{ printf "%s.%s" .Values.registry_browser.container_name .Values.secret.tls.domain_host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.registry_browser.container_name }}
+                port:
+                  number: {{ .Values.registry_browser.port }}
+    - host: {{ printf "%s.%s" .Values.registry_browser.container_name .Values.secret.tls.domain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.registry_browser.container_name }}
+                port:
+                  number: {{ .Values.registry_browser.port }}
+                  
